@@ -36,9 +36,9 @@ class net_task1(nn.Module):
     def __init__(self):
         super(net_task1, self).__init__()
         
-        self.resnet = models.resnet18(weights='DEFAULT')
+        self.resnet = models.resnet34(weights='DEFAULT')
         self.model_wo_fc = nn.Sequential(*(list(self.resnet.children())[:-1]))
-        self.d  = nn.Dropout(p=0.2)
+        self.d  = nn.Dropout(p=0.1)
         # self.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, padding=0) 
         # self.conv1_1 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=0)
         # self.bn_1 = nn.BatchNorm2d(64)

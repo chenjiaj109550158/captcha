@@ -1,3 +1,5 @@
+
+
 # This Python 3 environment comes with many helpful analytics libraries installed
 # It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
 # For example, here's several helpful packages to load
@@ -56,8 +58,8 @@ class Task2Dataset(Dataset):
         img = np.array(img)
         target = []
         for char in str(label):
-                vec = [0.0] * 36 # num_class
-                vec[labels_map.find(char)] = 1.0
+                vec = [0] * 36 # num_class
+                vec[labels_map.find(char)] = 1
                 target += vec
 
         label = np.array(target)
@@ -97,7 +99,9 @@ class net_task2(nn.Module):
         x = self.model_wo_fc(x)
         x = self.d(x)
         x = torch.flatten(x, 1)
-        x = torch.sigmoid(self.fc(x))
+        x = self.fc(x)
+        # x = torch.sigmoid(self.fc(x))
+
         return x
 
 
@@ -115,6 +119,7 @@ if __name__ == '__main__':
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(torch.cuda.get_device_name(0))
+    # exit()
     train_data = []
     val_data = []
 
@@ -157,8 +162,8 @@ if __name__ == '__main__':
             label = label.to(device)
 
             pred = model(image)
-            print(label.dtype)
-            print(pred.dtype)
+            # print(label.dtype)
+            # print(pred.dtype)
             # exit()
             
             loss = loss_fn(pred, label)
