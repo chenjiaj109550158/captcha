@@ -32,7 +32,7 @@ from PIL import Image
 import torch.nn.functional as F
 from torchvision import models
 from matplotlib import pyplot as plt
-
+import denoise as dn
 
 TRAIN_PATH = "E:/ml/hw5/train"
 TEST_PATH = "/kaggle/input/captcha-hacker/test"
@@ -51,10 +51,18 @@ class Task2Dataset(Dataset):
     
     def __getitem__(self, index):
         filename, label = self.data[index]
-        img = Image.open(f"{self.root}/{filename}")
+        img = cv2.imread(f"{self.root}/{filename}")
+        # print(img.dtype)
+        denoised_img = dn.denoised_task2(img)
+        denoised_mask = np.array([denoised_img.astype('float64')])/255
+        
+        img_d = np.zeros_like(img)
+        for i in range(3):
+            img_d[:,:,i] = img[:,:,i]*denoised_mask
+        img = Image.fromarray(cv2.cvtColor(img_d, cv2.COLOR_BGR2RGB))
+        # img = Image.open(f"{self.root}/{filename}")
         img = self.transforms(img)
-        # img = cv2.resize(img, (32, 32))
-        # img = np.mean(img, axis=2)
+
         img = np.array(img)
         target = []
         for char in str(label):
@@ -125,7 +133,7 @@ if __name__ == '__main__':
 
     with open(f'{TRAIN_PATH}/annotations.csv', newline='') as csvfile:
         for row in csv.reader(csvfile, delimiter=','):
-            if random.random() < 0.7:
+            if random.random() < 1.1:
                 train_data.append(row)
             else:
                 val_data.append(row)
@@ -142,7 +150,7 @@ if __name__ == '__main__':
     
 
 
-    train_dl = DataLoader(train_ds, batch_size=100, num_workers=4, drop_last=True, shuffle=True)
+    train_dl = DataLoader(train_ds, batch_size=200, num_workers=4, drop_last=True, shuffle=True)
 
     val_ds = Task2Dataset(val_data, root=TRAIN_PATH, transforms=data_transforms)
     val_dl = DataLoader(val_ds, batch_size=100, num_workers=4, drop_last=False, shuffle=False)
@@ -154,6 +162,7 @@ if __name__ == '__main__':
 
     loss_hist = np.array([])
     
+    is_final_train = 1
     for epoch in tqdm(range(100)):
         # print(f"Epoch [{epoch}]")
         model.train()
@@ -173,55 +182,56 @@ if __name__ == '__main__':
             optimizer.step()
             loss_hist = np.append(loss_hist, loss.to('cpu').detach().numpy())
             # print(loss.to('cpu').detach().numpy())
-        sample_count = 0
-        correct_count = 0
-        model.eval()
-        for image, label in val_dl:
-            image = image.to(device)
-            label = label.to(device)
-            
-            pred = model(image).to('cpu').detach().numpy()
-            # for p in pred:
-            #     print(p)
-            label = label.to('cpu').detach().numpy()
-            # print(pred.shape)
-            pred_a = []
-            for i in pred:
-                # print(output)
-                # exit()
-                y_p= ''
-                # print(output.to('cpu').detach().numpy())
-                # exit()
-                idx = np.argmax(i[:36])
-                y_p += str(labels_map[idx])
-                idx = np.argmax(i[36:])
-                y_p += str(labels_map[idx])
-                pred_a.append(y_p)
-            label_a = []
-            for i in label:
-                # print(output)
-                # exit()
-                y_p= ''
-                # print(output.to('cpu').detach().numpy())
-                # exit()
-                idx = np.argmax(i[:36])
-                y_p += str(labels_map[idx])
-                idx = np.argmax(i[36:])
-                y_p += str(labels_map[idx])
-                label_a.append(y_p)
-            
-            # print(torch.argmax(pred[0:36], dim=1))
-            pred = np.array(pred_a)
-            label = np.array(label_a)
+        if not is_final_train:
+            sample_count = 0
+            correct_count = 0
+            model.eval()
+            for image, label in val_dl:
+                image = image.to(device)
+                label = label.to(device)
+                
+                pred = model(image).to('cpu').detach().numpy()
+                # for p in pred:
+                #     print(p)
+                label = label.to('cpu').detach().numpy()
+                # print(pred.shape)
+                pred_a = []
+                for i in pred:
+                    # print(output)
+                    # exit()
+                    y_p= ''
+                    # print(output.to('cpu').detach().numpy())
+                    # exit()
+                    idx = np.argmax(i[:36])
+                    y_p += str(labels_map[idx])
+                    idx = np.argmax(i[36:])
+                    y_p += str(labels_map[idx])
+                    pred_a.append(y_p)
+                label_a = []
+                for i in label:
+                    # print(output)
+                    # exit()
+                    y_p= ''
+                    # print(output.to('cpu').detach().numpy())
+                    # exit()
+                    idx = np.argmax(i[:36])
+                    y_p += str(labels_map[idx])
+                    idx = np.argmax(i[36:])
+                    y_p += str(labels_map[idx])
+                    label_a.append(y_p)
+                
+                # print(torch.argmax(pred[0:36], dim=1))
+                pred = np.array(pred_a)
+                label = np.array(label_a)
 
-            sample_count += len(image)
-            correct_count += (label == pred).sum()
+                sample_count += len(image)
+                correct_count += (label == pred).sum()
             
-        print("accuracy (validation):", correct_count / sample_count)
+            print("accuracy (validation):", correct_count / sample_count)
         
 
         
     plt.figure(figsize=(10, 10))
     plt.plot(loss_hist, label='loss')
     plt.show()
-    torch.save(model, 'model_t2.pt')
+    torch.save(model, 'model_t2_f.pt')

@@ -30,7 +30,7 @@ from PIL import Image
 import torch.nn.functional as F
 from torchvision import models
 from matplotlib import pyplot as plt
-
+import denoise as dn
 
 TRAIN_PATH = "E:/ml/hw5/train"
 TEST_PATH = "/kaggle/input/captcha-hacker/test"
@@ -48,10 +48,18 @@ class Task1Dataset(Dataset):
     
     def __getitem__(self, index):
         filename, label = self.data[index]
-        img = Image.open(f"{self.root}/{filename}")
+        img = cv2.imread(f"{self.root}/{filename}")
+        # print(img.dtype)
+        denoised_img = dn.denoised_task2(img)
+        denoised_mask = np.array([denoised_img.astype('float64')])/255
+        
+        img_d = np.zeros_like(img)
+        for i in range(3):
+            img_d[:,:,i] = img[:,:,i]*denoised_mask
+        img = Image.fromarray(cv2.cvtColor(img_d, cv2.COLOR_BGR2RGB))
+        # img = Image.open(f"{self.root}/{filename}")
         img = self.transforms(img)
-        # img = cv2.resize(img, (32, 32))
-        # img = np.mean(img, axis=2)
+
         img = np.array(img)
         one_hot_vec = np.zeros(10)
         one_hot_vec[int(label)]=1
@@ -115,7 +123,7 @@ if __name__ == '__main__':
 
     with open(f'{TRAIN_PATH}/annotations.csv', newline='') as csvfile:
         for row in csv.reader(csvfile, delimiter=','):
-            if random.random() < 0.7:
+            if random.random() < 1.1:
                 train_data.append(row)
             else:
                 val_data.append(row)
@@ -142,7 +150,7 @@ if __name__ == '__main__':
     loss_fn = nn.CrossEntropyLoss()
 
     loss_hist = np.array([])
-    
+    is_final_train = 1 
     for epoch in tqdm(range(100)):
         # print(f"Epoch [{epoch}]")
         model.train()
@@ -162,25 +170,26 @@ if __name__ == '__main__':
             loss_hist = np.append(loss_hist, loss.to('cpu').detach().numpy())
         sample_count = 0
         correct_count = 0
-        model.eval()
-        for image, label in val_dl:
-            image = image.to(device)
-            label = label.to(device)
-            
-            pred = model(image)
-            loss = loss_fn(pred, label)
-            
-            pred = torch.argmax(pred, dim=1)
-            label = torch.argmax(label, dim=1)
-            
-            sample_count += len(image)
-            correct_count += (label == pred).sum()
-            
-        print("accuracy (validation):", correct_count / sample_count)
+        if not is_final_train:
+            model.eval()
+            for image, label in val_dl:
+                image = image.to(device)
+                label = label.to(device)
+                
+                pred = model(image)
+                loss = loss_fn(pred, label)
+                
+                pred = torch.argmax(pred, dim=1)
+                label = torch.argmax(label, dim=1)
+
+                sample_count += len(image)
+                correct_count += (label == pred).sum()
+                
+            print("accuracy (validation):", correct_count / sample_count)
 
 
         
     plt.figure(figsize=(10, 10))
     plt.plot(loss_hist, label='loss')
     plt.show()
-    torch.save(model, 'model_t1.pt')
+    torch.save(model, 'model_t1_f.pt')
