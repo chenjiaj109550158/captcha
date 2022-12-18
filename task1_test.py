@@ -49,8 +49,8 @@ class Task1Dataset(Dataset):
     def __getitem__(self, index):
         filename, label = self.data[index]
         img = cv2.imread(f"{self.root}/{filename}")
-        # print(img.dtype)
-        denoised_img = dn.denoised_task2(img)
+        # # print(img.dtype)
+        denoised_img = dn.denoised_task1(img)
         denoised_mask = np.array([denoised_img.astype('float64')])/255
         
         img_d = np.zeros_like(img)
@@ -100,14 +100,14 @@ class net_task1(nn.Module):
         x = self.model_wo_fc(x)
         x = self.d(x)
         x = torch.flatten(x, 1)
-        x = F.softmax(self.fc(x), dim=1)
+        x = self.fc(x)
         return x
 
 
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = net_task1().to(device)
-    model= torch.load('model_t1_den.pt')
+    model= torch.load('model_t1_f.pt')
 
     test_data = []
     with open(f'{TEST_PATH}/sample_submission.csv', newline='') as csvfile:

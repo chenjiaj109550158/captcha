@@ -115,7 +115,7 @@ class net_task3(nn.Module):
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = net_task3().to(device)
-    model= torch.load('model_t3_den.pt')
+    model= torch.load('model_t3_f.pt')
 
     test_data = []
     with open(f'{TEST_PATH}/sample_submission.csv', newline='') as csvfile:

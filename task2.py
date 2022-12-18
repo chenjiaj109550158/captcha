@@ -153,7 +153,7 @@ if __name__ == '__main__':
     train_dl = DataLoader(train_ds, batch_size=200, num_workers=4, drop_last=True, shuffle=True)
 
     val_ds = Task2Dataset(val_data, root=TRAIN_PATH, transforms=data_transforms)
-    val_dl = DataLoader(val_ds, batch_size=100, num_workers=4, drop_last=False, shuffle=False)
+    val_dl = DataLoader(val_ds, batch_size=200, num_workers=4, drop_last=False, shuffle=False)
     
 
     model = net_task2().to(device)
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     
     is_final_train = 1
     for epoch in tqdm(range(100)):
-        # print(f"Epoch [{epoch}]")
+        
         model.train()
         for image, label in train_dl:
             image = image.to(device)
@@ -183,6 +183,7 @@ if __name__ == '__main__':
             loss_hist = np.append(loss_hist, loss.to('cpu').detach().numpy())
             # print(loss.to('cpu').detach().numpy())
         if not is_final_train:
+            print(f"Epoch [{epoch}]")
             sample_count = 0
             correct_count = 0
             model.eval()
@@ -234,4 +235,4 @@ if __name__ == '__main__':
     plt.figure(figsize=(10, 10))
     plt.plot(loss_hist, label='loss')
     plt.show()
-    torch.save(model, 'model_t2_f.pt')
+    # torch.save(model, 'model_t2_f.pt')

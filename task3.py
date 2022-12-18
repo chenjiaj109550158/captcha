@@ -150,10 +150,10 @@ if __name__ == '__main__':
     
 
 
-    train_dl = DataLoader(train_ds, batch_size=200, num_workers=4, drop_last=True, shuffle=True)
+    train_dl = DataLoader(train_ds, batch_size=100, num_workers=4, drop_last=True, shuffle=True)
 
     val_ds = Task3Dataset(val_data, root=TRAIN_PATH, transforms=data_transforms)
-    val_dl = DataLoader(val_ds, batch_size=200, num_workers=4, drop_last=False, shuffle=False)
+    val_dl = DataLoader(val_ds, batch_size=100, num_workers=4, drop_last=False, shuffle=False)
     
 
     model = net_task3().to(device)

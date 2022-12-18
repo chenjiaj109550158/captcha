@@ -49,8 +49,8 @@ class Task1Dataset(Dataset):
     def __getitem__(self, index):
         filename, label = self.data[index]
         img = cv2.imread(f"{self.root}/{filename}")
-        # print(img.dtype)
-        denoised_img = dn.denoised_task2(img)
+        # # print(img.dtype)
+        denoised_img = dn.denoised_task1(img)
         denoised_mask = np.array([denoised_img.astype('float64')])/255
         
         img_d = np.zeros_like(img)
@@ -100,7 +100,7 @@ class net_task1(nn.Module):
         x = self.model_wo_fc(x)
         x = self.d(x)
         x = torch.flatten(x, 1)
-        x = F.softmax(self.fc(x), dim=1)
+        x = self.fc(x)
         return x
 
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     
 
 
-    train_dl = DataLoader(train_ds, batch_size=100, num_workers=4, drop_last=True, shuffle=True)
+    train_dl = DataLoader(train_ds, batch_size=200, num_workers=4, drop_last=True, shuffle=True)
 
     val_ds = Task1Dataset(val_data, root=TRAIN_PATH, transforms=data_transforms)
     val_dl = DataLoader(val_ds, batch_size=100, num_workers=4, drop_last=False, shuffle=False)
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     loss_fn = nn.CrossEntropyLoss()
 
     loss_hist = np.array([])
-    is_final_train = 1 
+    is_final_train = 1
     for epoch in tqdm(range(100)):
         # print(f"Epoch [{epoch}]")
         model.train()
