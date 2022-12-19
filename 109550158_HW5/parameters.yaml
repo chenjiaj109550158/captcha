@@ -1,0 +1,9 @@
+target_dir : E:\ml\hw5\
+denoise:
+  area_removed_size_t1 : 50
+  kernel_size_t1 : 4
+  area_removed_size_t2 : 50
+  kernel_size_t2 : 2
+  area_removed_size_t3 : 50
+  kernel_size_t3 : 2
+

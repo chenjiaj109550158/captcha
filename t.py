@@ -17,10 +17,10 @@ import cv2
 dataset = pd.read_csv("submission.csv")
 # print(dataset.shape)
 for  i in range(dataset.shape[0]):
-    if  dataset.loc[i]['filename'].split('/')[0]=='task3':
+    if  dataset.loc[i]['filename'].split('/')[0]=='task2':
         file_name =  dataset.loc[i]['filename'].split('/')[1]
         label =  dataset.loc[i]['label']
-        img = cv2.imread("E:/ml/hw5/test/task3/"+file_name)
+        img = cv2.imread("E:/ml/hw5/test/task2/"+file_name)
         # print(img.shape)
         print(i, ':', label)
         cv2.imshow('s', img)
